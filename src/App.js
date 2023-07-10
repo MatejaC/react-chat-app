@@ -1,37 +1,7 @@
+import React, { Component } from "react";
 import "./App.css";
 import Messages from "./Messages";
-import React, { Component } from "react";
-
-class App extends Component {
-  state = {
-    messages: [
-      {
-        text: "This is a test message!",
-        member: {
-          color: "blue",
-          username: "bluemoon",
-        },
-      },
-    ],
-    member: {
-      username: randomName(),
-      color: randomColor(),
-    },
-  };
-
-  render() {
-    return (
-      <div className="App">
-        <Messages
-          messages={this.state.messages}
-          currentMember={this.state.member}
-        />
-      </div>
-    );
-  }
-}
-
-export default App;
+import Input from "./Input";
 
 function randomName() {
   const adjectives = [
@@ -175,3 +145,58 @@ function randomName() {
 function randomColor() {
   return "#" + Math.floor(Math.random() * 0xffffff).toString(16);
 }
+
+class App extends Component {
+  state = {
+    messages: [],
+    member: {
+      username: randomName(),
+      color: randomColor(),
+    },
+  };
+
+  constructor() {
+    super();
+    this.drone = new window.Scaledrone("CV0PZNy0xOr2vWQa", {
+      data: this.state.member,
+    });
+    this.drone.on("open", (error) => {
+      if (error) {
+        return console.error(error);
+      }
+      const member = { ...this.state.member };
+      member.id = this.drone.clientId;
+      this.setState({ member });
+    });
+    const room = this.drone.subscribe("observable-room");
+    room.on("data", (data, member) => {
+      const messages = [...this.state.messages];
+      messages.push({ member, text: data });
+      this.setState({ messages });
+    });
+  }
+
+  render() {
+    return (
+      <div className="App">
+        <div className="App-header">
+          <h1>My Chat App</h1>
+        </div>
+        <Messages
+          messages={this.state.messages}
+          currentMember={this.state.member}
+        />
+        <Input onSendMessage={this.onSendMessage} />
+      </div>
+    );
+  }
+
+  onSendMessage = (message) => {
+    this.drone.publish({
+      room: "observable-room",
+      message,
+    });
+  };
+}
+
+export default App;
