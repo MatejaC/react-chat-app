@@ -1,3 +1,4 @@
-# React Chat: Building A Realtime Messaging App
+# React Chat 
 
-built with React.js and Scaledrone service
+- Project made on Algebra University Zagreb
+- built with React.js and Scaledrone service
